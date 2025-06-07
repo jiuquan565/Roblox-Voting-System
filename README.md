@@ -3,8 +3,7 @@
 ## 一、系统概述
 本投票系统基于Roblox客户端-服务器架构设计，实现了管理员发起投票、玩家投票、实时统计票数及结果展示等功能。系统支持动态调整字体大小、管理员权限控制及投票结果自动/手动结束，适用于Roblox游戏内的决策场景。
 
-[English](#system-overview) | [中文](#一系统概述) | [日本語](#システムの概要)
-
+[English](#system-overview) | [中文](#一系统概述) |
 
 ## 二、系统架构
 ### 2.1 目录结构
@@ -186,8 +185,7 @@ end
 ## 1. System Overview  
 This voting system is designed based on the Roblox client-server architecture, enabling features such as admin-initiated voting, player voting, real-time vote counting, and result display. The system supports dynamic font size adjustment, admin permission control, and automatic/manual vote termination, suitable for decision-making scenarios in Roblox games.  
 
-[English](#system-overview) | [中文](#一系统概述) | [日本語](#システムの概要)
-
+[English](#system-overview) | [中文](#一系统概述) 
 ## 2. System Architecture  
 ### 2.1 Directory Structure  
 ```  
@@ -354,173 +352,3 @@ end
 | Votes not updating real-time | Client not listening to `UpdateVotes` | Verify `VotingEvent.OnClientEvent` binding |  
 | Admins cannot modify votes | Permission check error                  | Review `isAdmin` authentication logic |  
 | Incorrect data in result pop-up | Server result data not passed correctly | Ensure `results` are included in `EndVote` event |
-
-
-
-### システムの概要
-# Roblox投票システム開発ドキュメント
-
-## 1. システム概要
-この投票システムはRobloxのクライアント-サーバーアーキテクチャに基づいて設計されており、管理者による投票の開始、プレイヤーによる投票、リアルタイムの票数カウント、結果表示などの機能を実現しています。システムは動的なフォントサイズ調整、管理者権限制御、投票結果の自動/手動終了をサポートしており、Robloxゲーム内の意思決定シナリオに適しています。
-
-[English](#system-overview) | [中文](#一系统概述) | [日本語](#システムの概要)
-
-## 2. システムアーキテクチャ
-### 2.1 ディレクトリ構造
-```
-ServerScriptService/
-└── VotingSystem.lua       -- サーバー側のコアロジック
-StarterGui/
-└── VotingUI.lua           -- クライアント側のUIロジック
-```
-
-### 2.2 技術スタック
-- **通信**: RobloxのRemoteEventsを使用してクライアントとサーバー間のデータ通信を行います。
-- **データストレージ**: グローバル変数に投票ステータス(`currentVote`)、票数(`votes`)、プレイヤーの投票記録(`votedPlayers`)を格納します。
-- **UIレンダリング**:
-  - **サーバー側**: `SurfaceGui`を使用して3Dパーツ上に結果を表示します。
-  - **クライアント側**: `ScreenGui`を使用して2Dの投票インターフェースを作成し、ボタン操作と結果ポップアップをサポートします。
-
-## 3. コア機能設計
-### 3.1 投票フロー
-1. **投票開始**:
-   - 管理者がチャットコマンド`!startvote [質問]`で投票を開始します。デフォルトの投票時間は30秒です。
-   - サーバーが`StartVote`イベントをブロードキャストし、クライアントが投票UIを表示します。
-
-2. **プレイヤー投票**:
-   - プレイヤーがオプションボタン(賛成/反対/棄権)をクリックすると、クライアントがサーバーに`CastVote`リクエストを送信します。
-   - サーバーは投票の有効性を検証し、投票の変更(前回の選択を上書き)を許可します。
-   - 管理者以外のプレイヤーは投票後自動的にUIが閉じられますが、管理者は複数回投票を変更できます。
-
-3. **投票終了**:
-   - **自動終了**: すべての非管理者プレイヤーが投票したか、時間制限に達したときにトリガーされます。
-   - **手動終了**: 管理者が`!endvote`コマンドで強制終了させます。
-   - サーバーが`EndVote`イベントをブロードキャストし、クライアントが最終結果ポップアップを表示します。
-
-### 3.2 インターフェースとインタラクション
-#### 3.2.1 サーバー側表示(3Dパーツ)
-- **メインタイトル**: 投票ステータス(進行中/結果)を表示し、動的に色が変化します(白→緑)。
-- **オプションラベル**: 各オプションのリアルタイムの票数を表示し、色分けされています(緑-賛成、赤-反対、灰色-棄権)。
-- **フォントサイズ**: デフォルトで固定されています(メインタイトル: 32px、オプション: 28px)。`TextSize`プロパティを介して調整可能です。
-
-#### 3.2.2 クライアント側UI(2Dインターフェース)
-- **投票インターフェース**:
-  - 質問タイトル、オプションボタン(リアルタイム票数付き)、ステータス通知を含みます。
-  - ボタンをクリックすると選択したオプションがハイライトされ、投票成功後に通知が表示されます。
-- **結果ポップアップ**:
-  - 投票の質問、各オプションの票数とパーセンテージを表示します。
-  - 手動で閉じることも、自動的に消えることもできます(8秒後)。
-
-### 3.3 権限制御
-- **管理者機能**:
-  - 投票の開始/終了。
-  - 複数回の投票変更(UIは開いたまま)。
-- **一般プレイヤー**:
-  - 1回のみ投票可能(変更も1回の操作としてカウント)。
-  - 投票後自動的にUIが閉じます。
-
-## 4. キーコード解析
-### 4.1 サーバー側コアロジック(`VotingSystem.lua`)
-#### 4.1.1 投票開始関数
-```lua
-function StartVote(question, duration)
-    if currentVote then return false, "投票中です" end
-    currentVote = {
-        Question = question,
-        StartTime = os.time(),
-        EndTime = os.time() + duration,
-        Options = {"賛成", "反対", "棄権"}
-    }
-    votes = {["賛成"]=0, ["反対"]=0, ["棄権"]=0}
-    VotingEvent:FireAllClients("StartVote", currentVote) -- 投票開始をブロードキャスト
-    UpdateVoteResultDisplay()
-end
-```
-
-#### 4.1.2 投票処理関数
-```lua
-function CastVote(player, option)
-    local previousVote = votedPlayers[player.UserId]
-    if previousVote then votes[previousVote] = votes[previousVote] - 1 end -- 投票変更ロジック
-    votes[option] = votes[option] + 1
-    votedPlayers[player.UserId] = option
-    VotingEvent:FireAllClients("UpdateVotes", votes, votedPlayers) -- リアルタイムで票数を更新
-    if not isAdmin then VotingEvent:FireClient(player, "CloseVoteUI") end -- 管理者以外のUIを閉じる
-end
-```
-
-#### 4.1.3 結果更新関数
-```lua
-function UpdateVoteResultDisplay(isFinalResult)
-    if isFinalResult then
-        mainTextLabel.Text = "投票結果: " .. currentVote.Question
-        mainTextLabel.TextColor3 = Color3.new(0, 1, 0)
-    else
-        mainTextLabel.Text = "投票中: " .. currentVote.Question
-    end
-    -- 各オプションの票数を更新
-    for _, option in ipairs(OPTIONS) do
-        optionLabels[option.name].Text = option.display .. ": " .. (votes[option.name] or 0) .. "票"
-    end
-end
-```
-
-### 4.2 クライアント側UIロジック(`VotingUI.lua`)
-#### 4.2.1 投票インターフェース初期化
-```lua
-function StartVoteUI(voteData)
-    Frame.Visible = true
-    QuestionLabel.Text = "投票: " .. voteData.Question
-    -- オプションボタンを作成
-    for i, option in ipairs(OPTIONS) do
-        local btn = Instance.new("TextButton")
-        btn.Text = option.display
-        btn.TextColor3 = option.color
-        btn.MouseButton1Click:Connect(function()
-            VotingEvent:FireServer("CastVote", option.name) -- 投票リクエストを送信
-        end)
-    end
-end
-```
-
-#### 4.2.2 結果ポップアップ表示
-```lua
-function ShowVoteResults(voteData, results)
-    local resultFrame = Instance.new("Frame")
-    -- 投票の質問と各オプションの結果を表示
-    for i, result in ipairs(results) do
-        local item = Instance.new("Frame")
-        -- オプション名、票数、パーセンテージを表示
-        PercentageLabel.Text = math.floor((result.Votes / totalVotes) * 100) .. "%"
-    end
-    -- 閉じるボタンと自動破棄ロジックを追加
-    CloseButton.MouseButton1Click:Connect(function() resultFrame:Destroy() end)
-    task.wait(8, function() resultFrame:Destroy() end)
-end
-```
-
-## 5. デプロイと設定
-### 5.1 管理者設定
-- サーバースクリプトの`admins`テーブルを修正して管理者のユーザー名を追加します:
-  ```lua
-  local admins = {"AdminName1", "AdminName2"} -- 実際の管理者名に置き換えてください
-  ```
-
-### 5.2 インターフェースカスタマイズ
-- **フォントサイズ**: `TextSize`プロパティを調整します(例: `mainTextLabel.TextSize = 36` でメインタイトルのサイズを変更)。
-- **カラースキーム**: `OPTIONS`テーブルの`color`フィールドを変更します(例: `Color3.new(0, 0.8, 0)` で明るい緑色を設定)。
-- **レイアウトサイズ**: `Frame`の`Size`と`Position`プロパティを変更します(適応型レイアウトにはUDim2を使用)。
-
-## 6. 拡張提案
-1. **多言語対応**: 言語切り替え機能を追加し、テキストのローカリゼーションを設定テーブルで管理します。
-2. **投票履歴**: 投票記録を保存し、管理者が過去の結果を照会できるようにします。
-3. **不正防止**: UserID検証を使用して、プレイヤーの複数投票を制限します。
-4. **アニメーション**: 結果ポップアップにフェードイン/アウトエフェクトを追加し、UXを向上させます。
-
-## 7. 問題解決
-| 問題の説明 | 考えられる原因 | 解決策 |
-|--------------------------|-----------------------------------------|-----------------------------------|
-| 投票UIが表示されない | リモートイベントのブロードキャストに失敗 | `VotingEvent:FireAllClients`を確認 |
-| 票数がリアルタイムで更新されない | クライアントが`UpdateVotes`をリッスンしていない | `VotingEvent.OnClientEvent`のバインドを確認 |
-| 管理者が投票を変更できない | 権限チェックエラー | `isAdmin`認証ロジックを確認 |
-| 結果ポップアップのデータが正しくない | サーバーの結果データが正しく渡されていない | `EndVote`イベントに`results`が含まれていることを確認 |
